@@ -12,12 +12,18 @@ export const Direction = {
 }
 
 const defaultState = {
+  delta: {
+    x: 0,
+    y: 0,
+  },
   direction: {
     x: null,
     y: null,
   },
-  dx: 0,
-  dy: 0,
+  scrollPosition: {
+    x: 0,
+    y: 0,
+  },
 }
 
 function getDirection(axis, movement) {
@@ -29,32 +35,45 @@ function getDirection(axis, movement) {
   return Direction.NONE
 }
 
-function getDeltaState(a, b) {
-  const dx = b.scrollLeft - a.scrollLeft
-  const dy = b.scrollTop - a.scrollTop
-  const direction = {
-    x: getDirection(Axis.X, dx),
-    y: getDirection(Axis.Y, dy),
+export function getScrollPosition(element) {
+  return {
+    x: element.scrollLeft,
+    y: element.scrollTop,
   }
-
-  return { dx, dy, direction }
 }
 
-export function getScrollState(oldState, scrollEvent) {
+export function getScrollState(oldState, scrollPosition) {
   const comparisonState = oldState || defaultState
-  const deltaState = getDeltaState(comparisonState, scrollEvent)
+
+  const delta = {
+    x: scrollPosition.x - comparisonState.scrollPosition.x,
+    y: scrollPosition.y - comparisonState.scrollPosition.y,
+  }
+
+  const direction = {
+    x: getDirection(Axis.X, delta.x),
+    y: getDirection(Axis.Y, delta.y),
+  }
 
   return {
-    ...scrollEvent,
-    ...deltaState,
+    delta,
+    direction,
+    scrollPosition,
   }
 }
 
-export function withVelocity(gSS, timespan) {
-  return (oldState, scrollEvent) => {
-    let history = oldState.history || []
+export function withPositionGetter(getPosition, gSS) {
+  return oldState => gSS(oldState, getPosition())
+}
 
-    const state = gSS(oldState, scrollEvent)
+export function withVelocity(timespan, gSS) {
+  return (oldState, scrollPosition) => {
+    let history =
+      oldState === null || oldState.history === undefined
+        ? []
+        : oldState.history
+
+    const state = gSS(oldState, scrollPosition)
     const now = Date.now()
     state.timestamp = now
 
@@ -70,8 +89,8 @@ export function withVelocity(gSS, timespan) {
       }
 
       const dt = state.timestamp - history[0].timestamp
-      velocity.x = (state.scrollLeft - history[0].scrollLeft) / dt
-      velocity.y = (state.scrollTop - history[0].scrollTop) / dt
+      velocity.x = (state.scrollPosition.x - history[0].scrollPosition.x) / dt
+      velocity.y = (state.scrollPosition.y - history[0].scrollPosition.y) / dt
     }
 
     state.velocity = velocity
