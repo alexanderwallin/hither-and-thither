@@ -1,4 +1,4 @@
-const Axis = {
+export const Axis = {
   X: 'X',
   Y: 'Y',
 }
@@ -26,7 +26,7 @@ const defaultState = {
   },
 }
 
-function getDirection(axis, movement) {
+export function getScrollDirection(axis, movement) {
   if (movement > 0) {
     return axis === Axis.X ? Direction.RIGHT : Direction.DOWN
   } else if (movement < 0) {
@@ -51,8 +51,8 @@ export function getScrollState(oldState, scrollPosition) {
   }
 
   const direction = {
-    x: getDirection(Axis.X, delta.x),
-    y: getDirection(Axis.Y, delta.y),
+    x: getScrollDirection(Axis.X, delta.x),
+    y: getScrollDirection(Axis.Y, delta.y),
   }
 
   return {

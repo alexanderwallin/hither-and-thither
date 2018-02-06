@@ -3,7 +3,9 @@ import td from 'testdouble'
 import { has, isNumber, set } from 'lodash'
 
 import {
+  Axis,
   Direction,
+  getScrollDirection,
   getScrollPosition,
   getScrollState,
   withPositionGetter,
@@ -26,6 +28,22 @@ const emptyState = {
 }
 
 const zeroPosition = { x: 0, y: 0 }
+
+//
+// getScrollDirection()
+//
+
+test('getScrollDirection() returns NONE when movement is 0', t => {
+  t.is(getScrollDirection(Axis.X, 0), Direction.NONE)
+  t.is(getScrollDirection(Axis.Y, 0), Direction.NONE)
+})
+
+test('getScrollDirection() returns correct directions', t => {
+  t.is(getScrollDirection(Axis.X, -1), Direction.LEFT)
+  t.is(getScrollDirection(Axis.X, 1), Direction.RIGHT)
+  t.is(getScrollDirection(Axis.Y, -1), Direction.UP)
+  t.is(getScrollDirection(Axis.Y, 1), Direction.DOWN)
+})
 
 //
 // getScrollPosition()
