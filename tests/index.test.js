@@ -1,6 +1,6 @@
 import test from 'ava'
 import td from 'testdouble'
-import { has, isNumber, keys, pick, set } from 'lodash'
+import { has, isNumber, set } from 'lodash'
 
 import {
   Direction,
@@ -167,11 +167,10 @@ test('withPositionGetter() provides getScrollState() with a scroll position usin
 const SECOND = 1000
 
 let getScrollStateWithVelocity
-let fakeDate
 
 test.beforeEach(() => {
   getScrollStateWithVelocity = withVelocity(SECOND, getScrollState)
-  fakeDate = td.replace(Date, 'now')
+  td.replace(Date, 'now')
 })
 
 test.afterEach(() => {
