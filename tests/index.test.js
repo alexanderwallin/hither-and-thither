@@ -1,7 +1,8 @@
 import test from 'ava'
-import { keys, pick } from 'lodash'
+import td from 'testdouble'
+import { has, isNumber, keys, pick } from 'lodash'
 
-import { Direction, getScrollState } from '../src/index.js'
+import { Direction, getScrollState, withVelocity } from '../src/index.js'
 
 const emptyEvent = {
   scrollLeft: 0,
@@ -14,6 +15,10 @@ test('getScrollState() returns a state with all the properties from the scroll e
 
   t.deepEqual(evt, pick(state, keys(evt)))
 })
+
+//
+// Delta values
+//
 
 test('dx and dy are correct', t => {
   // dx
@@ -91,6 +96,10 @@ test('dx and dy are correct', t => {
   t.is(stateY6.dy, 0)
 })
 
+//
+// Directions
+//
+
 test('directions are NONE for equal scroll events', t => {
   const state = getScrollState(emptyEvent, emptyEvent)
   t.is(state.direction.x, Direction.NONE)
@@ -109,4 +118,103 @@ test('directions are correct', t => {
 
   const state4 = getScrollState(emptyEvent, { ...emptyEvent, scrollTop: -10 })
   t.is(state4.direction.y, Direction.UP)
+})
+
+//
+// Velocity
+//
+
+const SECOND = 1000
+
+let getScrollStateWithVelocity
+let fakeDate
+
+test.beforeEach(() => {
+  getScrollStateWithVelocity = withVelocity(getScrollState, SECOND)
+  fakeDate = td.replace(Date, 'now')
+})
+
+test.afterEach(() => {
+  td.reset()
+})
+
+test('withVelocity() decorated function returns a state that has all common properties', t => {
+  const state = getScrollStateWithVelocity(emptyEvent, emptyEvent)
+  t.true(has(state, 'dx'))
+  t.true(has(state, 'dy'))
+  t.true(has(state, 'direction.x'))
+  t.true(has(state, 'direction.y'))
+})
+
+test('withVelocity() decorated function returns null velocities in its first invokation', t => {
+  const state = getScrollStateWithVelocity(emptyEvent, emptyEvent)
+  t.is(state.velocity.x, null)
+  t.is(state.velocity.y, null)
+})
+
+test('withVelocity() decorated function returns null velocities until its timespan has passed', t => {
+  td.when(Date.now()).thenReturn(0, SECOND / 2, SECOND)
+
+  const state1 = getScrollStateWithVelocity(emptyEvent, emptyEvent)
+  t.is(state1.velocity.x, null)
+  t.is(state1.velocity.y, null)
+
+  const state2 = getScrollStateWithVelocity(state1, emptyEvent)
+  t.is(state2.velocity.x, null)
+  t.is(state2.velocity.y, null)
+
+  const state3 = getScrollStateWithVelocity(state2, emptyEvent)
+  t.true(isNumber(state3.velocity.x))
+  t.true(isNumber(state3.velocity.y))
+})
+
+test('withVelocity() decorated function returns correct velocities', t => {
+  td.when(Date.now()).thenReturn(0, SECOND, SECOND * 3, SECOND * 6)
+
+  const state1 = getScrollStateWithVelocity(emptyEvent, emptyEvent)
+
+  const state2 = getScrollStateWithVelocity(state1, {
+    ...emptyEvent,
+    scrollLeft: 10,
+    scrollTop: 10,
+  })
+  t.is(state2.velocity.x, 10 / SECOND)
+  t.is(state2.velocity.y, 10 / SECOND)
+
+  const state3 = getScrollStateWithVelocity(state2, {
+    ...emptyEvent,
+    scrollLeft: state2.scrollLeft + 250,
+    scrollTop: state2.scrollTop + 500,
+  })
+  t.is(state3.velocity.x, 250 / (SECOND * 2))
+  t.is(state3.velocity.y, 500 / (SECOND * 2))
+
+  const state4 = getScrollStateWithVelocity(state3, {
+    ...emptyEvent,
+    scrollLeft: state3.scrollLeft + 666,
+    scrollTop: state3.scrollTop - 666,
+  })
+  t.is(state4.velocity.x, 666 / (SECOND * 3))
+  t.is(state4.velocity.y, -666 / (SECOND * 3))
+})
+
+test('withVelocity() decorated function ignores ancient events', t => {
+  td.when(Date.now()).thenReturn(SECOND * 10)
+
+  const event1 = { ...emptyEvent, timestamp: 0 }
+  const event2 = { ...emptyEvent, timestamp: 1 }
+  const event3 = { ...emptyEvent, timestamp: 3 }
+  const event4 = { ...emptyEvent, timestamp: SECOND }
+  const oldState = {
+    ...emptyEvent,
+    history: [event1, event2, event3, event4],
+  }
+
+  const state = getScrollStateWithVelocity(oldState, {
+    ...emptyEvent,
+    scrollLeft: 100,
+    scrollTop: -100,
+  })
+  t.is(state.velocity.x, 100 / (SECOND * 9))
+  t.is(state.velocity.y, -100 / (SECOND * 9))
 })
