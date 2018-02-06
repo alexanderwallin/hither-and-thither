@@ -7,23 +7,25 @@
     "babel-polyfill": "^6.26.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-eslint": "^8.2.1",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-latest": "^6.24.1",
+    "@babel/register": "^7.0.0-beta.39",
+    "ava": "^1.0.0-beta.1",
+    "babel-cli": "^7.0.0-beta.3",
+    "babel-core": "^7.0.0-beta.3",
+    "babel-eslint": "^8.0.0-alpha.17",
+    "babel-plugin-transform-class-properties": "^7.0.0-beta.3",
+    "babel-plugin-transform-object-rest-spread": "^7.0.0-beta.3",
+    "babel-preset-env": "^7.0.0-beta.3",
     "eslint": "^4.17.0",
     "eslint-config-airbnb": "^16.1.0",
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-prettier": "^2.6.0",
+    "lodash": "^4.17.5",
     "prettier": "^1.10.2"
   },
   "scripts": {
     "build": "babel --out-dir dist src",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "ava --files tests/**/*.js --verbose"
   },
   "repository": {
     "type": "git",
@@ -37,5 +39,10 @@
   "bugs": {
     "url": "https://github.com/alexanderwallin/scroll-state-thingy/issues"
   },
-  "homepage": "https://github.com/alexanderwallin/scroll-state-thingy#readme"
+  "homepage": "https://github.com/alexanderwallin/scroll-state-thingy#readme",
+  "ava": {
+    "require": [
+      "@babel/register"
+    ]
+  }
 }

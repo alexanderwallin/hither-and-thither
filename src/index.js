@@ -30,8 +30,8 @@ function getDirection(axis, movement) {
 }
 
 function getDeltaState(a, b) {
-  const dx = a.scrollLeft - b.scrollLeft
-  const dy = a.scrollTop - b.scrollTop
+  const dx = b.scrollLeft - a.scrollLeft
+  const dy = b.scrollTop - a.scrollTop
   const direction = {
     x: getDirection(Axis.X, dx),
     y: getDirection(Axis.Y, dy),
